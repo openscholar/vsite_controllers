@@ -30,37 +30,38 @@ class spaces_controller_vsite_views extends spaces_controller {
   }
 
   protected function load_space_values($id = NULL) {
-    if ($id != NULL && empty($this->loaded['space'][$id])) {
-      $q = db_query("SELECT object_id AS id, value
-        FROM {spaces_overrides}
-        WHERE type = '%s'
-          AND id = '%s'
-          AND object_type = '%s'
-          AND object_id LIKE '%s%%'",
-        $this->space_type, $this->space_id, $this->controller, $id);
+    if (!$this->loaded_all['space']) {
+      if (isset($id) && !isset($this->loaded['space'][$id])) {
+        $q = db_query("SELECT object_id AS id, value
+          FROM {spaces_overrides}
+          WHERE type = '%s'
+            AND id = '%s'
+            AND object_type = '%s'
+            AND object_id LIKE '%s%%'",
+          $this->space_type, $this->space_id, $this->controller, $id);
 
-      while ($r = db_fetch_array($q)) {
-        $field = str_replace($id.':', '', $r['id']);
-        $this->values['space'][$id][$field] = unserialize($r['value']);
-      }
-      $this->loaded['space'][$id] = TRUE;
-    }
-    elseif ($id == NULL && empty($this->loaded_all['space'])) {
-
-      $q = db_query("SELECT object_id AS id, value
-        FROM {spaces_overrides}
-        WHERE type = '%s'
-          AND id = '%s'
-          AND object_type = '%s'",
-        $this->space_type, $this->space_id, $this->controller);
-
-      while ($r = db_fetch_array($q)) {
-        list($name, $display, $field) = explode(':', $r['id']);
-        $id = $name.':'.$display;
-        $this->values['space'][$id][$field] = unserialize($r['value']);
+        while ($r = db_fetch_array($q)) {
+          $field = str_replace($id.':', '', $r['id']);
+          $this->values['space'][$id][$field] = unserialize($r['value']);
+        }
         $this->loaded['space'][$id] = TRUE;
       }
-      $this->loaded_all['space'] = TRUE;
+      else {
+        $q = db_query("SELECT object_id AS id, value
+          FROM {spaces_overrides}
+          WHERE type = '%s'
+            AND id = '%s'
+            AND object_type = '%s'",
+          $this->space_type, $this->space_id, $this->controller);
+
+        while ($r = db_fetch_array($q)) {
+          list($name, $display, $field) = explode(':', $r['id']);
+          $id = $name.':'.$display;
+          $this->values['space'][$id][$field] = unserialize($r['value']);
+          $this->loaded['space'][$id] = TRUE;
+        }
+        $this->loaded_all['space'] = TRUE;
+      }
     }
   }
 
